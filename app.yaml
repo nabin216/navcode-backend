@@ -1,7 +1,15 @@
 runtime: python311
 
 env_variables:
-  DJANGO_SETTINGS_MODULE: "backend.settings"
+  DJANGO_SETTINGS_MODULE: "core.settings"
+  DJANGO_DEBUG: "False"
+  ALLOWED_HOSTS: ".el.r.appspot.com"
+  DB_NAME: "navcode"
+  DB_USER: "postgres"
+  DB_PASSWORD: "navcode123"
+  GS_BUCKET_NAME: "navcode-backend.appspot.com"
+  GOOGLE_CLOUD_PROJECT: "navcode-backend"
+  DJANGO_SECRET_KEY: "your-production-secret-key-here"
 
 handlers:
 - url: /static
@@ -19,4 +27,7 @@ automatic_scaling:
   min_instances: 1
   max_instances: 10
 
-entrypoint: gunicorn -b :$PORT backend.wsgi:application 
+entrypoint: gunicorn --bind :$PORT --workers 2 --threads 8 --timeout 60 core.wsgi:application
+
+beta_settings:
+  cloud_sql_instances: navcode-backend:us-central1:navcode-db 
