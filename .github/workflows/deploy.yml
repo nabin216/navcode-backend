@@ -38,21 +38,21 @@ jobs:
         DB_USER: ${{ secrets.DB_USER }}
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         GS_BUCKET_NAME: ${{ secrets.GS_BUCKET_NAME }}
-        GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
+        GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
 
     - name: Authenticate with Google Cloud
       id: auth
       uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
-        project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
         create_credentials_file: true
         export_environment_variables: true
 
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
       with:
-        project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
         install_components: 'app-engine-python'
 
     - name: Verify Google Cloud Auth
@@ -72,4 +72,4 @@ jobs:
         DB_USER: ${{ secrets.DB_USER }}
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         GS_BUCKET_NAME: ${{ secrets.GS_BUCKET_NAME }}
-        GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }} 
+        GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT_ID }} 
