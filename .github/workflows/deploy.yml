@@ -39,6 +39,11 @@ jobs:
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         GS_BUCKET_NAME: ${{ secrets.GS_BUCKET_NAME }}
         GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
+        GCP_PRIVATE_KEY_ID: ${{ secrets.GCP_PRIVATE_KEY_ID }}
+        GCP_PRIVATE_KEY: ${{ secrets.GCP_PRIVATE_KEY }}
+        GCP_CLIENT_EMAIL: ${{ secrets.GCP_CLIENT_EMAIL }}
+        GCP_CLIENT_ID: ${{ secrets.GCP_CLIENT_ID }}
+        GCP_CLIENT_X509_CERT_URL: ${{ secrets.GCP_CLIENT_X509_CERT_URL }}
 
     - name: Authenticate with Google Cloud
       id: auth
@@ -72,4 +77,9 @@ jobs:
         DB_USER: ${{ secrets.DB_USER }}
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         GS_BUCKET_NAME: ${{ secrets.GS_BUCKET_NAME }}
-        GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT_ID }} 
+        GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
+        GCP_PRIVATE_KEY_ID: ${{ secrets.GCP_PRIVATE_KEY_ID }}
+        GCP_PRIVATE_KEY: ${{ secrets.GCP_PRIVATE_KEY }}
+        GCP_CLIENT_EMAIL: ${{ secrets.GCP_CLIENT_EMAIL }}
+        GCP_CLIENT_ID: ${{ secrets.GCP_CLIENT_ID }}
+        GCP_CLIENT_X509_CERT_URL: ${{ secrets.GCP_CLIENT_X509_CERT_URL }} 
