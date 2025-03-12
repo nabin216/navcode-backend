@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from google.oauth2 import service_account
+from datetime import timedelta
 
 # Load environment variables from .env file
 load_dotenv()
@@ -15,16 +17,12 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'your-default-secret-key-for-develop
 DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() == 'true'
 
 ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '.azurewebsites.net',
-    os.getenv('WEBSITE_HOSTNAME', ''),
+    '*',  # Replace with your App Engine URL once deployed
 ]
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
-    'https://navcode-frontend.azurewebsites.net',
-    os.getenv('FRONTEND_URL', ''),
+    # Add your frontend URL once deployed
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -58,22 +56,41 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+ROOT_URLCONF = 'backend.urls'
 
-if os.getenv('AZURE_POSTGRESQL_CONNECTIONSTRING'):
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = 'backend.wsgi.application'
+
+# Database
+if os.getenv('GAE_APPLICATION', None):
+    # Running on production App Engine, so connect to Google Cloud SQL
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('AZURE_POSTGRESQL_DATABASE'),
-            'USER': os.getenv('AZURE_POSTGRESQL_USER'),
-            'PASSWORD': os.getenv('AZURE_POSTGRESQL_PASSWORD'),
-            'HOST': os.getenv('AZURE_POSTGRESQL_HOST'),
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST'),
             'PORT': '5432',
-            'OPTIONS': {'sslmode': 'require'},
         }
     }
 else:
+    # Running locally, so use SQLite
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -82,16 +99,22 @@ else:
     }
 
 # Static files (CSS, JavaScript, Images)
-if os.getenv('AZURE_STORAGE_CONNECTION_STRING'):
-    # Azure Blob Storage settings
-    DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
-    STATICFILES_STORAGE = 'storages.backends.azure_storage.AzureStorage'
-    AZURE_ACCOUNT_NAME = os.getenv('AZURE_STORAGE_ACCOUNT_NAME')
-    AZURE_ACCOUNT_KEY = os.getenv('AZURE_STORAGE_ACCOUNT_KEY')
-    AZURE_CONTAINER = os.getenv('AZURE_STORAGE_CONTAINER')
-    AZURE_CUSTOM_DOMAIN = f'{AZURE_ACCOUNT_NAME}.blob.core.windows.net'
-    STATIC_URL = f'https://{AZURE_CUSTOM_DOMAIN}/{AZURE_CONTAINER}/'
-    MEDIA_URL = f'https://{AZURE_CUSTOM_DOMAIN}/{AZURE_CONTAINER}/'
+if os.getenv('GAE_APPLICATION', None):
+    # Google Cloud Storage settings
+    GS_BUCKET_NAME = os.getenv('GS_BUCKET_NAME')
+    STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+    DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+    
+    # Use signed URLs instead of public access
+    GS_DEFAULT_ACL = None  # Don't set ACL
+    GS_QUERYSTRING_AUTH = True  # Enable signed URLs
+    GS_EXPIRATION = timedelta(hours=1)  # URLs expire after 1 hour
+    
+    # If you're using a service account key file
+    if os.path.exists('google-credentials.json'):
+        GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+            'google-credentials.json'
+        )
 else:
     STATIC_URL = '/static/'
     STATIC_ROOT = BASE_DIR / 'staticfiles'
