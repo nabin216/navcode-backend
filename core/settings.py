@@ -136,22 +136,48 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files (uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Static files configuration
-if DEBUG:
-    STATICFILES_DIRS = [
-        os.path.join(BASE_DIR, 'static'),
-    ]
-
-# Create necessary directories if they don't exist
-os.makedirs(os.path.join(BASE_DIR, 'static'), exist_ok=True)
-os.makedirs(os.path.join(BASE_DIR, 'media'), exist_ok=True)
-os.makedirs(os.path.join(BASE_DIR, 'media/blog/images'), exist_ok=True)
+# Configure static files handling based on environment
+if os.getenv('GAE_APPLICATION', None):
+    GS_BUCKET_NAME = os.getenv('GS_BUCKET_NAME')
+    
+    # Google Cloud Storage configuration
+    GS_CREDENTIALS = service_account.Credentials.from_service_account_info({
+        "type": "service_account",
+        "project_id": os.getenv('GOOGLE_CLOUD_PROJECT'),
+        "private_key_id": os.getenv('GCP_PRIVATE_KEY_ID'),
+        "private_key": os.getenv('GCP_PRIVATE_KEY').replace('\\n', '\n'),
+        "client_email": os.getenv('GCP_CLIENT_EMAIL'),
+        "client_id": os.getenv('GCP_CLIENT_ID'),
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_x509_cert_url": os.getenv('GCP_CLIENT_X509_CERT_URL')
+    })
+    
+    # Static files configuration for production
+    STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+    DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+    STATIC_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/static/'
+    MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/media/'
+    GS_DEFAULT_ACL = 'publicRead'
+    GS_QUERYSTRING_AUTH = False
+    GS_EXPIRATION = timedelta(hours=1)
+else:
+    # Local development settings
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    if DEBUG:
+        STATICFILES_DIRS = [
+            os.path.join(BASE_DIR, 'static'),
+        ]
+        # Only create directories in development
+        os.makedirs(os.path.join(BASE_DIR, 'static'), exist_ok=True)
+        os.makedirs(os.path.join(BASE_DIR, 'media'), exist_ok=True)
+        os.makedirs(os.path.join(BASE_DIR, 'media/blog/images'), exist_ok=True)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -194,12 +220,3 @@ if not DEBUG:
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-# Google Cloud Storage settings
-if os.getenv('GAE_APPLICATION', None):
-    GS_BUCKET_NAME = os.getenv('GS_BUCKET_NAME')
-    DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-    MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
-    GS_DEFAULT_ACL = None
-    GS_QUERYSTRING_AUTH = True
-    GS_EXPIRATION = timedelta(hours=1)
