@@ -13,7 +13,7 @@ env_variables:
 
 handlers:
 - url: /static
-  static_dir: staticfiles/
+  static_dir: staticfiles
   secure: always
 
 - url: /.*
@@ -27,7 +27,7 @@ automatic_scaling:
   min_instances: 1
   max_instances: 10
 
-entrypoint: gunicorn --bind :$PORT --workers 2 --threads 8 --timeout 60 core.wsgi:application
+entrypoint: gunicorn -b :$PORT core.wsgi:application
 
 beta_settings:
   cloud_sql_instances: navcode-backend:us-central1:navcode-db 
