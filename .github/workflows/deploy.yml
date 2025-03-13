@@ -12,8 +12,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        path: navcode-backend
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -27,21 +25,16 @@ jobs:
         ls -la
         echo "Workspace contents:"
         ls -la $GITHUB_WORKSPACE
-        echo "Checking repository structure:"
-        cd navcode-backend
-        ls -la
 
     - name: Install dependencies
+      working-directory: backend
       run: |
-        cd navcode-backend/backend
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install google-auth google-cloud-storage django-storages[google]
 
     - name: Collect static files
-      run: |
-        cd navcode-backend/backend
-        python manage.py collectstatic --noinput
+      working-directory: backend
       env:
         DJANGO_SETTINGS_MODULE: core.settings
         DJANGO_DEBUG: "False"
@@ -57,6 +50,7 @@ jobs:
         GCP_CLIENT_ID: ${{ secrets.GCP_CLIENT_ID }}
         GCP_CLIENT_X509_CERT_URL: ${{ secrets.GCP_CLIENT_X509_CERT_URL }}
         DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+      run: python manage.py collectstatic --noinput
 
     - name: Authenticate with Google Cloud
       id: auth
@@ -74,16 +68,14 @@ jobs:
         install_components: 'app-engine-python'
 
     - name: Verify Google Cloud Auth
+      working-directory: backend
       run: |
-        cd navcode-backend/backend
         gcloud auth list
         gcloud config list project
         gcloud info
 
     - name: Deploy to App Engine
-      run: |
-        cd navcode-backend/backend
-        gcloud app deploy app.yaml --quiet
+      working-directory: backend
       env:
         DJANGO_SETTINGS_MODULE: core.settings
         DJANGO_DEBUG: "False"
@@ -98,4 +90,5 @@ jobs:
         GCP_CLIENT_EMAIL: ${{ secrets.GCP_CLIENT_EMAIL }}
         GCP_CLIENT_ID: ${{ secrets.GCP_CLIENT_ID }}
         GCP_CLIENT_X509_CERT_URL: ${{ secrets.GCP_CLIENT_X509_CERT_URL }}
-        DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }} 
+        DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+      run: gcloud app deploy app.yaml --quiet 
