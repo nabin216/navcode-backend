@@ -4,12 +4,12 @@ env_variables:
   DJANGO_SETTINGS_MODULE: "core.settings"
   DJANGO_DEBUG: "False"
   ALLOWED_HOSTS: ".el.r.appspot.com"
-  DB_NAME: "navcode"
-  DB_USER: "postgres"
-  DB_PASSWORD: "navcode123"
-  GS_BUCKET_NAME: "navcode-backend.appspot.com"
-  GOOGLE_CLOUD_PROJECT: "navcode-backend"
-  DJANGO_SECRET_KEY: "your-production-secret-key-here"
+  DB_NAME: ${DB_NAME}
+  DB_USER: ${DB_USER}
+  DB_PASSWORD: ${DB_PASSWORD}
+  GS_BUCKET_NAME: ${GS_BUCKET_NAME}
+  GOOGLE_CLOUD_PROJECT: ${GCP_PROJECT_ID}
+  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
 
 handlers:
 - url: /static
