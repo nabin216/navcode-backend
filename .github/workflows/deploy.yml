@@ -12,6 +12,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        path: navcode-backend
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -23,21 +25,22 @@ jobs:
         echo "Current directory: $(pwd)"
         echo "Directory contents:"
         ls -la
-        echo "Repository root contents:"
+        echo "Workspace contents:"
         ls -la $GITHUB_WORKSPACE
-        echo "Backend directory contents:"
-        ls -la backend || echo "Backend directory not found"
+        echo "Checking repository structure:"
+        cd navcode-backend
+        ls -la
 
     - name: Install dependencies
       run: |
-        cd backend
+        cd navcode-backend/backend
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install google-auth google-cloud-storage django-storages[google]
 
     - name: Collect static files
       run: |
-        cd backend
+        cd navcode-backend/backend
         python manage.py collectstatic --noinput
       env:
         DJANGO_SETTINGS_MODULE: core.settings
@@ -72,14 +75,14 @@ jobs:
 
     - name: Verify Google Cloud Auth
       run: |
-        cd backend
+        cd navcode-backend/backend
         gcloud auth list
         gcloud config list project
         gcloud info
 
     - name: Deploy to App Engine
       run: |
-        cd backend
+        cd navcode-backend/backend
         gcloud app deploy app.yaml --quiet
       env:
         DJANGO_SETTINGS_MODULE: core.settings
