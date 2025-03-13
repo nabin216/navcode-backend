@@ -34,15 +34,16 @@ jobs:
 
     - name: Install dependencies
       run: |
-        cd $GITHUB_WORKSPACE
+        echo "Current location: $(pwd)"
+        ls -la
         python -m pip install --upgrade pip
-        pip install -r backend/requirements.txt
+        pip install -r requirements.txt
         pip install google-auth google-cloud-storage django-storages[google]
+      working-directory: ${{ github.workspace }}/backend
 
     - name: Collect static files
-      run: |
-        cd $GITHUB_WORKSPACE/backend
-        python manage.py collectstatic --noinput
+      run: python manage.py collectstatic --noinput
+      working-directory: ${{ github.workspace }}/backend
       env:
         DJANGO_SETTINGS_MODULE: core.settings
         DJANGO_DEBUG: "False"
@@ -76,15 +77,14 @@ jobs:
 
     - name: Verify Google Cloud Auth
       run: |
-        cd $GITHUB_WORKSPACE/backend
         gcloud auth list
         gcloud config list project
         gcloud info
+      working-directory: ${{ github.workspace }}/backend
 
     - name: Deploy to App Engine
-      run: |
-        cd $GITHUB_WORKSPACE/backend
-        gcloud app deploy app.yaml --quiet
+      run: gcloud app deploy app.yaml --quiet
+      working-directory: ${{ github.workspace }}/backend
       env:
         DJANGO_SETTINGS_MODULE: core.settings
         DJANGO_DEBUG: "False"
