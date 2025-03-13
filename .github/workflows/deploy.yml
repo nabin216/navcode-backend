@@ -9,9 +9,15 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -23,18 +29,20 @@ jobs:
         echo "Current directory: $(pwd)"
         echo "Directory contents:"
         ls -la
-        echo "Workspace contents:"
-        ls -la $GITHUB_WORKSPACE
+        echo "Repository root:"
+        ls -R
 
     - name: Install dependencies
-      working-directory: backend
       run: |
+        cd $GITHUB_WORKSPACE
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r backend/requirements.txt
         pip install google-auth google-cloud-storage django-storages[google]
 
     - name: Collect static files
-      working-directory: backend
+      run: |
+        cd $GITHUB_WORKSPACE/backend
+        python manage.py collectstatic --noinput
       env:
         DJANGO_SETTINGS_MODULE: core.settings
         DJANGO_DEBUG: "False"
@@ -50,7 +58,6 @@ jobs:
         GCP_CLIENT_ID: ${{ secrets.GCP_CLIENT_ID }}
         GCP_CLIENT_X509_CERT_URL: ${{ secrets.GCP_CLIENT_X509_CERT_URL }}
         DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
-      run: python manage.py collectstatic --noinput
 
     - name: Authenticate with Google Cloud
       id: auth
@@ -68,14 +75,16 @@ jobs:
         install_components: 'app-engine-python'
 
     - name: Verify Google Cloud Auth
-      working-directory: backend
       run: |
+        cd $GITHUB_WORKSPACE/backend
         gcloud auth list
         gcloud config list project
         gcloud info
 
     - name: Deploy to App Engine
-      working-directory: backend
+      run: |
+        cd $GITHUB_WORKSPACE/backend
+        gcloud app deploy app.yaml --quiet
       env:
         DJANGO_SETTINGS_MODULE: core.settings
         DJANGO_DEBUG: "False"
@@ -90,5 +99,4 @@ jobs:
         GCP_CLIENT_EMAIL: ${{ secrets.GCP_CLIENT_EMAIL }}
         GCP_CLIENT_ID: ${{ secrets.GCP_CLIENT_ID }}
         GCP_CLIENT_X509_CERT_URL: ${{ secrets.GCP_CLIENT_X509_CERT_URL }}
-        DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
-      run: gcloud app deploy app.yaml --quiet 
+        DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }} 
